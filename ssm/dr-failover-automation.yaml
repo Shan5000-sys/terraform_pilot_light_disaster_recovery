@@ -1,0 +1,50 @@
+description: "Disaster Recovery - Failover to Secondary EC2 Instance"
+schemaVersion: '0.3'
+assumeRole: '{{ AutomationAssumeRole }}'
+parameters:
+  InstanceId:
+    type: String
+    description: "(Required) ID of the secondary EC2 instance"
+  EndpointGroupArn:
+    type: String
+    description: "(Required) ARN of the Global Accelerator endpoint group"
+  SnsTopicArn:
+    type: String
+    description: "(Required) SNS topic to notify"
+mainSteps:
+  - name: startInstance
+    action: aws:changeInstanceState
+    inputs:
+      InstanceIds:
+        - "{{ InstanceId }}"
+      DesiredState: running
+
+  - name: waitForHealthy
+    action: aws:waitForAwsResourceProperty
+    inputs:
+      Service: ec2
+      Api: DescribeInstanceStatus
+      InstanceIds:
+        - "{{ InstanceId }}"
+      PropertySelector: "$.InstanceStatuses[0].InstanceState.Name"
+      DesiredValues:
+        - running
+
+  - name: updateEndpointWeight
+    action: aws:executeAwsApi
+    inputs:
+      Service: globalaccelerator
+      Api: UpdateEndpointGroup
+      EndpointGroupArn: "{{ EndpointGroupArn }}"
+      EndpointConfigurations:
+        - EndpointId: "{{ InstanceId }}"
+          Weight: 128
+
+  - name: notifySuccess
+    action: aws:executeAwsApi
+    inputs:
+      Service: sns
+      Api: Publish
+      TopicArn: "{{ SnsTopicArn }}"
+      Subject: "Disaster Recovery Failover Executed"
+      Message: "Failover complete. Secondary instance {{ InstanceId }} is now active."

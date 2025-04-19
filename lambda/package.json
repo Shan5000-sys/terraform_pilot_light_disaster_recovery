@@ -1,0 +1,11 @@
+{
+    "name": "dr-failover-lambda",
+    "version": "1.0.0",
+    "description": "Lambda function to trigger DR failover by starting EC2 and updating Global Accelerator",
+    "main": "index.js",
+    "scripts": {
+      "zip": "zip -r ../lambda_function_payload.zip ."
+    },
+    "author": "Your Name",
+    "license": "MIT"
+  }

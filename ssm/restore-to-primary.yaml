@@ -1,0 +1,43 @@
+description: "Restore traffic back to the primary EC2 instance"
+schemaVersion: '0.3'
+assumeRole: '{{ AutomationAssumeRole }}'
+parameters:
+  PrimaryInstanceId:
+    type: String
+    description: "(Required) ID of the primary EC2 instance"
+  EndpointGroupArn:
+    type: String
+    description: "(Required) ARN of the Global Accelerator endpoint group"
+  SnsTopicArn:
+    type: String
+    description: "(Required) SNS topic to notify"
+mainSteps:
+  - name: checkPrimaryHealth
+    action: aws:waitForAwsResourceProperty
+    inputs:
+      Service: ec2
+      Api: DescribeInstanceStatus
+      InstanceIds:
+        - "{{ PrimaryInstanceId }}"
+      PropertySelector: "$.InstanceStatuses[0].InstanceState.Name"
+      DesiredValues:
+        - running
+
+  - name: updateGAWeight
+    action: aws:executeAwsApi
+    inputs:
+      Service: globalaccelerator
+      Api: UpdateEndpointGroup
+      EndpointGroupArn: "{{ EndpointGroupArn }}"
+      EndpointConfigurations:
+        - EndpointId: "{{ PrimaryInstanceId }}"
+          Weight: 128
+
+  - name: notifyRestore
+    action: aws:executeAwsApi
+    inputs:
+      Service: sns
+      Api: Publish
+      TopicArn: "{{ SnsTopicArn }}"
+      Subject: "Primary Instance Restored"
+      Message: "Traffic has been restored to the primary instance {{ PrimaryInstanceId }}."
