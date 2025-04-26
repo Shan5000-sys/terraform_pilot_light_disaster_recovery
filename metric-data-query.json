@@ -1,0 +1,20 @@
+[
+    {
+      "Id": "healthCheckStatus",
+      "MetricStat": {
+        "Metric": {
+          "Namespace": "AWS/Route53",
+          "MetricName": "HealthCheckStatus",
+          "Dimensions": [
+            {
+              "Name": "HealthCheckId",
+              "Value": "13cbf96c-6697-44fc-b1ce-0565d2d0e25c"
+            }
+          ]
+        },
+        "Period": 60,
+        "Stat": "Average"
+      },
+      "ReturnData": true
+    }
+  ]

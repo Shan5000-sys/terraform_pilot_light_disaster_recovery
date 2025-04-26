@@ -124,3 +124,18 @@ variable "sns_topic_arn" {
   type        = string
 }
 
+variable "secondary_elastic_ip" {
+  description = "Elastic IP address used by the secondary instance for Global Accelerator"
+  type        = string
+}
+
+variable "primary_instance_ip" {
+  description = "Elastic IP address of the primary EC2 instance for Route 53 health check"
+  type        = string
+}
+
+variable "primary_health_check_id" {
+  description = "Optional manually-created Route 53 health check ID"
+  type        = string
+  default     = ""
+}
